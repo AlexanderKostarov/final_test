@@ -54,21 +54,40 @@ test("Step 1 - login to mail", async ({ page }) => {
     await page.waitForTimeout(2000);
 
     // 8. Move file from documents to trash folder by drag'n'drop action
-    await page
-        .locator('[class="GCSDBRWBFT GCSDBRWBCKB name"]')
-        .dragTo(page.locator("#doc_tree_trash"));
-
-    /*    await page.locator('[class="GCSDBRWBFT GCSDBRWBCKB name"]').hover();
+    const trashCoordinates = await page
+        .locator("#doc_tree_trash")
+        .boundingBox();
+    const fileCoordinates = await page
+        .locator('tr[tabindex="0"]')
+        .boundingBox();
+    await page.locator('tr[tabindex="0"]').hover();
     await page.mouse.down();
-    await page.locator('#doc_tree_trash').hover();
-    await page.mouse.up();*/
+    if (fileCoordinates) {
+        await page.mouse.move(
+            fileCoordinates.x + fileCoordinates.width / 3,
+            fileCoordinates.y + fileCoordinates.height / 3
+        );
+    }
+    if (trashCoordinates) {
+        await page.mouse.move(
+            trashCoordinates.x + trashCoordinates.width / 2,
+            trashCoordinates.y + trashCoordinates.height / 2
+        ); // Move mouse to the center of the element
+    }
+
+    await page
+        .locator('[id="gwt-uid-86@562678328"]')
+        .locator('[role="treeitem"][style="padding-left:27px;"]')
+        .hover();
+    await page.mouse.up();
+    await page.waitForTimeout(2000);
     // ER: file was moved
-    /*  await page.locator("#doc_tree_trash").click()
+    await page.locator("#doc_tree_trash").click();
     await page.waitForTimeout(2000);
     const fileAccounts = (await page.getByText("testfile.txt").count()) > 0;
     if (fileAccounts) {
         console.log("File was moved");
     } else {
         console.log("File was not moved");
-    } */
+    }
 });
