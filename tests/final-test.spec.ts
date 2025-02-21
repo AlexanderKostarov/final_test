@@ -1,6 +1,8 @@
 import { test, expect } from "@playwright/test";
 
 test("Step 1 - login to mail", async ({ page }) => {
+
+    const mailSubjectName = 'Auto mail 1'
     // 1. Login to mail
     await page.goto("https://mailfence.com/");
     await page.locator("#signin").click();
@@ -10,84 +12,82 @@ test("Step 1 - login to mail", async ({ page }) => {
     // 2. Attach .txt file
     await page.locator('[title="New"]').click();
     await page
-        .locator('[class="GCSDBRWBKSB GCSDBRWBO"]')
-        .getByText("Attachment")
+        .locator('[class="GCSDBRWBISB GCSDBRWBJSB"]')
+        .first()
         .click();
     const fileUpload = page.locator('[type="file"][name="docgwt-uid-33"]');
     await fileUpload.setInputFiles("./test-data/testfile.txt");
-    await page.waitForTimeout(2000);
+   // await page.waitForLoadState('load')
+    await page.locator('[class="GCSDBRWBJRB"]').waitFor()
 
     // 3. Send email with attached file to yourself
-    const currentUnreadMails = page
-        .locator("#treeInbox")
-        .locator('[class="GCSDBRWBOXB"]')
-        .textContent();
     await page
         .locator('[type="text"][tabindex="1"]')
         .fill("alik@mailfence.com");
-    await page.locator('[type="text"][tabindex="4"]').fill("Send txt file 1");
+    await page.locator('[type="text"][tabindex="4"]').fill(mailSubjectName);
     await page.locator("#mailSend").click();
     // 4. Check email is received
-    await page.waitForTimeout(2000);
-    await page.getByTitle("Refresh").click();
-    const newUnreadMails = page
-        .locator("#treeInbox")
-        .locator('[class="GCSDBRWBOXB"]')
-        .textContent();
-    expect(newUnreadMails).not.toEqual(currentUnreadMails);
-
     await page.locator("#treeInbox").click();
+
+    let indicator = 0
+    while (indicator == 0) {
+        if (await page.locator('tr[tabindex="0"]').filter({has: page.locator('[class="listSubject"][title= "Auto mail 1"]')}).filter({has: page.locator('[class="GCSDBRWBJUB"]').locator('[title="Alexander Kostarov  "]')}).count() > 0) {
+            break;
+        }
+//        await page.reload();
+//        await page.locator("#treeInbox").click();
+        await page.locator('[title="Refresh"]').click()
+    }
+
+    
     // 5. Open received mail
-    await page.locator('tr[tabindex="0"]').first().click();
+    await page.locator('tr[tabindex="0"]').filter({has: page.locator('[class="listSubject"][title= "Auto mail 1"]')}).filter({has: page.locator('[class="GCSDBRWBJUB"]').locator('[title="Alexander Kostarov  "]')}).click();
     // 6. Save the attached file to documents
+
     await page.getByTitle("testfile.txt (1 KB)").hover();
     await page
         .getByTitle("testfile.txt (1 KB)")
         .locator('[class="icon-Arrow-down"]')
         .click();
     await page.getByText("Save in Documents").click();
-    await page.getByText("My documents").click();
-    await page.waitForTimeout(2000);
-    await page.getByText("Save").click();
+
+    await page.locator('[class="GCSDBRWBEY"]').locator('[class="GCSDBRWBDX treeItemRoot GCSDBRWBLX"]').locator('[class="treeItemLabel"]').click();
+    await page.locator('[tabindex="0"][class="btn GCSDBRWBO defaultBtn"]').waitFor()
+    await page.locator('[class="btn GCSDBRWBO defaultBtn"]').click();
     // 7. Open documents area
-    await page.locator('[class="icon24-Documents toolImg"]').click();
-    await page.waitForTimeout(2000);
+    await page.locator('[id="nav-docs"]').click();
+    const documentLocator = page.locator('tr[tabindex="0"]').filter({hasText: "testfile.txt"})
+    await documentLocator.waitFor() //meant that page is uploaded, instead of waitForTimeout
 
     // 8. Move file from documents to trash folder by drag'n'drop action
     const trashCoordinates = await page
         .locator("#doc_tree_trash")
         .boundingBox();
     const fileCoordinates = await page
-        .locator('tr[tabindex="0"]')
+        .locator('tr[tabindex="0"]').filter({hasText: "testfile.txt"})
         .boundingBox();
-    await page.locator('tr[tabindex="0"]').hover();
+    await page.locator('tr[tabindex="0"]').filter({hasText: "testfile.txt"}).hover();
     await page.mouse.down();
-    if (fileCoordinates) {
+ /*   if (fileCoordinates) {
         await page.mouse.move(
             fileCoordinates.x + fileCoordinates.width / 3,
             fileCoordinates.y + fileCoordinates.height / 3
         );
-    }
+    } */
     if (trashCoordinates) {
         await page.mouse.move(
             trashCoordinates.x + trashCoordinates.width / 2,
-            trashCoordinates.y + trashCoordinates.height / 2
+            trashCoordinates.y + trashCoordinates.height / 2,
+            { steps: 20}
         ); // Move mouse to the center of the element
     }
 
     await page
-        .locator('[id="gwt-uid-86@562678328"]')
-        .locator('[role="treeitem"][style="padding-left:27px;"]')
+        .locator('[id="doc_tree_trash"]')
         .hover();
     await page.mouse.up();
-    await page.waitForTimeout(2000);
     // ER: file was moved
     await page.locator("#doc_tree_trash").click();
-    await page.waitForTimeout(2000);
-    const fileAccounts = (await page.getByText("testfile.txt").count()) > 0;
-    if (fileAccounts) {
-        console.log("File was moved");
-    } else {
-        console.log("File was not moved");
-    }
+ //   await page.locator('[class="GCSDBRWBOBC"]').waitFor() //show us that trash page is opened
+    await expect(page.locator('tr[tabindex="0"]').first().locator('[class="GCSDBRWBPJB"]')).toHaveText('»testfile.txt')
 });
