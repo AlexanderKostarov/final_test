@@ -1,8 +1,10 @@
 import { test, expect } from "@playwright/test";
 
 test("Step 1 - login to mail", async ({ page }) => {
-
-    const mailSubjectName = 'Auto mail 1'
+    function generateMailSubject(length: number): string{
+        return Math.random().toString(36).substring(2, 2 + length)
+    }
+    const mailSubjectName = generateMailSubject(15)
     // 1. Login to mail
     await page.goto("https://mailfence.com/");
     await page.locator("#signin").click();
@@ -26,22 +28,38 @@ test("Step 1 - login to mail", async ({ page }) => {
         .fill("alik@mailfence.com");
     await page.locator('[type="text"][tabindex="4"]').fill(mailSubjectName);
     await page.locator("#mailSend").click();
+
+    const timeSent = new Date();
+    
     // 4. Check email is received
     await page.locator("#treeInbox").click();
+/*    let indicator = 0
+    let mailLocator =  page.locator('tr[tabindex="0"]').filter({has: page.locator('[class="listSubject"][title= "Auto mail 1"]')}).filter({has: page.locator('[class="GCSDBRWBJUB"]').locator('[title="Alexander Kostarov  "]')}).first()
+    let timeReceived = new Date(await page.locator('tr[tabindex="0"]').locator('[class="GCSDBRWBIUB"]').first().getAttribute('title'))
+    console.log('timeSent = ', timeSent)
+    console.log('timeReceived = ', timeReceived)
 
-    let indicator = 0
     while (indicator == 0) {
-        if (await page.locator('tr[tabindex="0"]').filter({has: page.locator('[class="listSubject"][title= "Auto mail 1"]')}).filter({has: page.locator('[class="GCSDBRWBJUB"]').locator('[title="Alexander Kostarov  "]')}).count() > 0) {
+        await page.locator('tr[tabindex="0"]').first().waitFor()
+        timeReceived = new Date(await page.locator('tr[tabindex="0"]').locator('[class="GCSDBRWBIUB"]').first().getAttribute('title'))
+        console.log(timeReceived)
+        if (await mailLocator.count() > 0 && timeReceived.getTime() >= timeSent.getTime()) {
             break;
         }
-//        await page.reload();
-//        await page.locator("#treeInbox").click();
+            */
+    let indicator = 0
+    while (indicator === 0) {
+        if (await page.locator('[class="GCSDBRWBKUB"]').locator(`[title="${mailSubjectName}"]`).count() > 0) {
+            break;
+        }
         await page.locator('[title="Refresh"]').click()
     }
 
+
     
     // 5. Open received mail
-    await page.locator('tr[tabindex="0"]').filter({has: page.locator('[class="listSubject"][title= "Auto mail 1"]')}).filter({has: page.locator('[class="GCSDBRWBJUB"]').locator('[title="Alexander Kostarov  "]')}).click();
+
+    await page.locator(`[title = "${mailSubjectName}"]`).click();
     // 6. Save the attached file to documents
 
     await page.getByTitle("testfile.txt (1 KB)").hover();
