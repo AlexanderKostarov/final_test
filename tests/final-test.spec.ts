@@ -33,20 +33,7 @@ test("Step 1 - login to mail", async ({ page }) => {
     
     // 4. Check email is received
     await page.locator("#treeInbox").click();
-/*    let indicator = 0
-    let mailLocator =  page.locator('tr[tabindex="0"]').filter({has: page.locator('[class="listSubject"][title= "Auto mail 1"]')}).filter({has: page.locator('[class="GCSDBRWBJUB"]').locator('[title="Alexander Kostarov  "]')}).first()
-    let timeReceived = new Date(await page.locator('tr[tabindex="0"]').locator('[class="GCSDBRWBIUB"]').first().getAttribute('title'))
-    console.log('timeSent = ', timeSent)
-    console.log('timeReceived = ', timeReceived)
 
-    while (indicator == 0) {
-        await page.locator('tr[tabindex="0"]').first().waitFor()
-        timeReceived = new Date(await page.locator('tr[tabindex="0"]').locator('[class="GCSDBRWBIUB"]').first().getAttribute('title'))
-        console.log(timeReceived)
-        if (await mailLocator.count() > 0 && timeReceived.getTime() >= timeSent.getTime()) {
-            break;
-        }
-            */
     let indicator = 0
     while (indicator === 0) {
         if (await page.locator('[class="GCSDBRWBKUB"]').locator(`[title="${mailSubjectName}"]`).count() > 0) {
@@ -86,12 +73,7 @@ test("Step 1 - login to mail", async ({ page }) => {
         .boundingBox();
     await page.locator('tr[tabindex="0"]').filter({hasText: "testfile.txt"}).hover();
     await page.mouse.down();
- /*   if (fileCoordinates) {
-        await page.mouse.move(
-            fileCoordinates.x + fileCoordinates.width / 3,
-            fileCoordinates.y + fileCoordinates.height / 3
-        );
-    } */
+
     if (trashCoordinates) {
         await page.mouse.move(
             trashCoordinates.x + trashCoordinates.width / 2,
