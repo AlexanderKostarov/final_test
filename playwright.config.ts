@@ -9,13 +9,14 @@ export default defineConfig({
     reporter: "html",
     use: {
         trace: "on-first-retry",
+        baseURL: "https://mailfence.com/"
     },
 
-/*    projects: [
+    projects: [
         {
             name: "chromium",
             use: { ...devices["Desktop Chrome"] },
         },
 
-    ], */
+    ], 
 });
