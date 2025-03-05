@@ -21,7 +21,6 @@ const fileName = `${mailSubjectName}.txt`;
 test("Step 1 - login to mail", async ({ page }) => {
 
     createFile();
-    const documentLocator = page.locator(`[title="${fileName}"]`);
     // 1. Login to mail
     const fillUserName = new InputElement(page.locator("#UserID"))
     const fillUserPassword = new InputElement(page.locator("#Password"))
@@ -62,7 +61,7 @@ test("Step 1 - login to mail", async ({ page }) => {
     // 4. Check email is received
     
     await getToInboxButton.click()
-
+    const documentLocator = page.locator(`[title="${fileName}"]`);
     const checkLettersAreUploaded = new BaseElement(page.locator('[class="GCSDBRWBBU"] [tabindex="0"]').first())
     const refreshButton = new ButtonElement(page.locator('[title="Refresh"]'));
     await waitUntilMailIsReceived(documentLocator, refreshButton, checkLettersAreUploaded)
@@ -103,7 +102,7 @@ test("Step 1 - login to mail", async ({ page }) => {
 
     await trashFolderElement.click();
     await openedTrashPageIdentifierElement.waitForElementAppears; //show us that trash page is opened
-    await expect(page.locator('[class="GCSDBRWBFT GCSDBRWBCKB name"]').filter({ hasText: `${fileName}` })).toBeVisible()
+    await requiredDocumentElement.checkToBeVisible()
     deleteFile();
 });
 
