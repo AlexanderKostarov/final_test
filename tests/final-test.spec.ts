@@ -10,6 +10,7 @@ import { promises as fs } from "fs";
 import path from "path";
 dotenv.config();
 
+
 const userMail = process.env.USER_Mail;
 const userPassword = process.env.USER_PASSWORD;
 const mailSubjectName = faker.address.zipCode();
@@ -26,84 +27,83 @@ test("Step 1 - login to mail", async ({ page }) => {
     const fillUserPassword = new InputElement(page.locator("#Password"))
     const enterButton = new ButtonElement(page.locator(".btn"))
 
-    await page.goto(process.env.LOGIN_PAGE);
-    await fillUserName.enterText(userMail)
-    await fillUserPassword.enterText(userPassword);
-    await enterButton.clickButton()
-   
-   
+    if (userMail !== undefined && userPassword !== undefined && process.env.LOGIN_PAGE !== undefined) {
+        await page.goto(process.env.LOGIN_PAGE);
+        await fillUserName.enterText(userMail)
+        await fillUserPassword.enterText(userPassword);
+    }
+    else
+        console.log('userMail or password or LOGIN_PAGE is undefined')
+    await enterButton.click()
     // 2. Attach .txt file
     const newMailButton = new ButtonElement(page.locator('[title="New"]'))
     const addAttachmentButton = new ButtonElement(page.locator('xpath=(//*[@class="GCSDBRWBISB GCSDBRWBJSB"])[1]'))
-    const uploadNewFile = new UploadElement(page.locator('[type="file"][name="docgwt-uid-33"]'))
+    const uploadNewFileElement = new UploadElement(page.locator('[type="file"][name="docgwt-uid-33"]'))
+    const waitAttachmentIsUploaded = new BaseElement(page.locator('[class="GCSDBRWBJRB"]'))
 
-    await newMailButton.clickButton()
-    await addAttachmentButton.clickButton()
-    await uploadNewFile.uploadFile(`./src/${fileName}`)
+    await newMailButton.click()
+    await addAttachmentButton.click()
+    await uploadNewFileElement.uploadFile(`./src/${fileName}`)
 
-    await page.locator('[class="GCSDBRWBJRB"]').waitFor();
+    await waitAttachmentIsUploaded.waitForElementAppears()
 
     // 3. Send email with attached file to yourself
-    const newMailRecipient = new InputElement(page.locator('[type="text"][tabindex="1"]'))
-    const newMailsubject = new InputElement(page.locator('[type="text"][tabindex="4"]'))
+    const newMailRecipientField = new InputElement(page.locator('[type="text"][tabindex="1"]'))
+    const newMailsubjectField = new InputElement(page.locator('[type="text"][tabindex="4"]'))
     const sendMailButton = new ButtonElement(page.locator("#mailSend"))
     const getToInboxButton = new ButtonElement(page.locator("#treeInbox"))
 
-    await newMailRecipient.enterText(process.env.USER_MAIL)
-    await newMailsubject.enterText(mailSubjectName)
-    await sendMailButton.clickButton()
+    if (userMail !== undefined)
+        await newMailRecipientField.enterText(userMail)
+    else console.log('Usermail is undefined')
+    await newMailsubjectField.enterText(mailSubjectName)
+    await sendMailButton.click()
 
     // 4. Check email is received
+    
+    await getToInboxButton.click()
+
+    const checkLettersAreUploaded = new BaseElement(page.locator('[class="GCSDBRWBBU"] [tabindex="0"]').first())
     const refreshButton = new ButtonElement(page.locator('[title="Refresh"]'));
-
-    await getToInboxButton.clickButton()
-
-    await waitUntilMailIsReceived(documentLocator, refreshButton)
+    await waitUntilMailIsReceived(documentLocator, refreshButton, checkLettersAreUploaded)
    
     // 5. Open received mail
-    const openMail = new ButtonElement(page.locator(`[title = "${mailSubjectName}"]`))
+    const openSelectedMailButton = new ButtonElement(page.locator(`[title = "${mailSubjectName}"]`))
    
-    await openMail.clickButton()
+    await openSelectedMailButton.click()
 
     // 6. Save the attached file to documents
-    const attachedFile = new ButtonElement(page.locator('[class="GCSDBRWBJRB GCSDBRWBO"]'))
-    const attachedFilesDropdown = new ButtonElement(page.locator('[class="GCSDBRWBJRB GCSDBRWBO"] [class="icon-Arrow-down"]'))
+    const attachedFileElement = new BaseElement(page.locator('[class="GCSDBRWBJRB GCSDBRWBO"]'))
+    const attachedFilesDropdownButton = new ButtonElement(page.locator('[class="GCSDBRWBJRB GCSDBRWBO"] [class="icon-Arrow-down"]'))
     const saveInDocumentsButton = new ButtonElement(page.locator('xpath=(//*[@class="GCSDBRWBOQ menu"])[1]'))
-    const saveTomyDocumentsFolder = new ButtonElement(page.locator('[class="GCSDBRWBEY"] [class="GCSDBRWBDX treeItemRoot GCSDBRWBLX"]'))
-    const saveAttachmentToMyDocumentsButton = new ButtonElement(page.locator('[tabindex="0"][class="btn GCSDBRWBO defaultBtn"]'))
+    const saveToMyDocumentsFolderButton = new ButtonElement(page.locator('[class="GCSDBRWBEY"] [class="GCSDBRWBDX treeItemRoot GCSDBRWBLX"]'))
+    const saveAttachmentButton = new ButtonElement(page.locator('[tabindex="0"][class="btn GCSDBRWBO defaultBtn"]'))
 
-    await attachedFile.hoverElement()
-    await attachedFilesDropdown.clickButton()
-    await saveInDocumentsButton.clickButton()
-    await saveTomyDocumentsFolder.clickButton()
-
-/*    await page
-        .locator('[tabindex="0"][class="btn GCSDBRWBO defaultBtn"]')
-        .waitFor();
-*/
-    await saveAttachmentToMyDocumentsButton.clickButton()  
+    await attachedFileElement.hoverElement()
+    await attachedFilesDropdownButton.click()
+    await saveInDocumentsButton.click()
+    await saveToMyDocumentsFolderButton.click()
+    await saveAttachmentButton.click()  
     // 7. Open documents area
     const getToDocumentsAreaButton = new ButtonElement(page.locator('[id="nav-docs"]'))
-    const myDocumentsFolder = new ButtonElement(page.locator('[class="GCSDBRWBDX treeItemRoot GCSDBRWBLX nodeSel"]'))
-
-    await getToDocumentsAreaButton.clickButton()
-    await myDocumentsFolder.clickButton()
-    await documentLocator.waitFor(); //meant that page is uploaded, instead of waitForTimeout
+    const myDocumentsFolderButton = new ButtonElement(page.locator('[class="GCSDBRWBDX treeItemRoot GCSDBRWBLX nodeSel"]'))
+    const waitDocumentAppears = new BaseElement(documentLocator)
+    await getToDocumentsAreaButton.click()
+    await myDocumentsFolderButton.click()
+    await waitDocumentAppears.waitForElementAppears; //meant that page is uploaded, instead of waitForTimeout
 
     // 8. Move file from documents to trash folder by drag'n'drop action
 
-    const requiredDocument = new ButtonElement(page.locator('[class="GCSDBRWBFT GCSDBRWBCKB name"]').filter({ hasText: `${fileName}` }))
+    const requiredDocumentElement = new BaseElement(page.locator('[class="GCSDBRWBFT GCSDBRWBCKB name"]').filter({ hasText: `${fileName}` }))
     const trashFolderElement = new BaseElement(page.locator("#doc_tree_trash"));
-    const openedTrashPageIdentifier = new BaseElement(page.locator('[class="GCSDBRWBOBC"]'))
-    await moveToTrash(page, requiredDocument, trashFolderElement)
+    const openedTrashPageIdentifierElement = new BaseElement(page.locator('[class="GCSDBRWBBU"] [tabindex="0"]').first())
+    await moveToTrash(page, requiredDocumentElement, trashFolderElement)
     // ER: file was moved
 
 
-    await trashFolderElement.clickButton();
-
-    await openedTrashPageIdentifier.waitForElementAppears; //show us that trash page is opened
-
-    await requiredDocument.checkToBeVisible()
+    await trashFolderElement.click();
+    await openedTrashPageIdentifierElement.waitForElementAppears; //show us that trash page is opened
+    await expect(page.locator('[class="GCSDBRWBFT GCSDBRWBCKB name"]').filter({ hasText: `${fileName}` })).toBeVisible()
     deleteFile();
 });
 
@@ -119,7 +119,7 @@ async function deleteFile() {
     await fs.unlink(filePath);
 }
 
-async function moveToTrash(page: Page, requiredDocument: ButtonElement, trashFolderElement: BaseElement) {
+async function moveToTrash(page: Page, requiredDocument: BaseElement, trashFolderElement: BaseElement) {
     const trashCoordinates = await trashFolderElement.getCoordinates()
     await requiredDocument.hoverElement()
     await page.mouse.down();
@@ -132,17 +132,20 @@ async function moveToTrash(page: Page, requiredDocument: ButtonElement, trashFol
     
     await trashFolderElement.hoverElement();
     await page.mouse.up();
+ //   await requiredDocument.waitForElementExpires()
 }
 
-async function waitUntilMailIsReceived (documentLocator: Locator, refreshButton: ButtonElement) {
+async function waitUntilMailIsReceived (documentLocator: Locator, refreshButton: ButtonElement, checkLettersAreUploaded: BaseElement) {
     const startTime = Date.now();
-    const loopDuration = 5000;
-    let indicator = 0;
-    while (indicator === 0 && Date.now() - startTime < loopDuration) {
-        if ((await documentLocator.count()) > 0) {
+    const maxTimeout = 5000;
+    while ( Date.now() - startTime < maxTimeout) {
+        await checkLettersAreUploaded.waitForElementAppears
+        if (await documentLocator.isVisible()) {
             break;
         }
-        await refreshButton.clickButton()
+        else {
+            await refreshButton.click()  
+        } 
     }
 
 }

@@ -13,7 +13,7 @@ export class BaseElement {
        return this.locator
     }
 
-    async clickButton() {
+    async click() {
         await this.getElement().click()
     }
 
@@ -37,4 +37,7 @@ export class BaseElement {
         await this.getElement().waitFor()
     }
 
+    async waitForElementExpires(){
+        await this.getElement().waitFor({ state: 'detached'} )
+    }
 }
