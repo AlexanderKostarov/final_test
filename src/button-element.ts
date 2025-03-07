@@ -3,13 +3,11 @@ import { BaseElement } from './base-element';
 
 export class ButtonElement extends BaseElement {
     
-    constructor(locator, name?) {
+    constructor(locator: Locator, name: string) {
         super(locator, name)
     }
 
     isEnabled() {
         return this.getElement().isEnabled();
     }
-
-    
 }

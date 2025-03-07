@@ -1,4 +1,7 @@
 import { defineConfig, devices } from "@playwright/test";
+import dotenv from "dotenv";
+
+dotenv.config();
 
 export default defineConfig({
     testDir: "./tests",
@@ -8,6 +11,7 @@ export default defineConfig({
     workers: process.env.CI ? 1 : undefined,
     reporter: "html",
     use: {
+        screenshot: "on",
         trace: "on-first-retry",
         baseURL: "https://mailfence.com/"
     },

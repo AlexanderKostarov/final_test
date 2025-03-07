@@ -2,11 +2,11 @@ import { Locator, Page, expect, test } from "@playwright/test";
 
 export class BaseElement {
     locator: Locator
-    private name: string = this.constructor.name
+    name: string 
 
-    constructor(locator: Locator, name?: string){
+    constructor(locator: Locator, name: string){
         this.locator = locator
-        if(name) this.name=name
+        this.name = name
     }
 
     getElement() {
@@ -14,7 +14,10 @@ export class BaseElement {
     }
 
     async click() {
-        await this.getElement().click()
+        await test.step(`${this.name} click`, async () => {
+            await this.getElement().click()
+        })
+        
     }
 
     async isVisible() {
@@ -22,7 +25,10 @@ export class BaseElement {
     }
 
     async hoverElement() {
-        await this.getElement().hover()
+        await test.step(`${this.name} hover`, async () => {
+            await this.getElement().hover()
+        })
+        
     }
 
     async getCoordinates() {
@@ -30,11 +36,16 @@ export class BaseElement {
     }
 
     async checkToBeVisible() {
-        await expect(this.getElement()).toBeVisible()
+        await test.step(`check ${this.name} is visible`, async () => {
+            await expect(this.getElement()).toBeVisible()
+        })
+
     }
 
     async waitForElementAppears() {
-        await this.getElement().waitFor()
+        await test.step(`wait for ${this.name} appearance`, async () =>{
+            await this.getElement().waitFor()
+        })      
     }
 
     async waitForElementExpires(){
