@@ -8,7 +8,7 @@ import { UploadElement } from "../src/upload-element";
 import path from "path";
 import { FileManager } from "../src/file-manager";
 
-const userMail = process.env.USER_Mail;
+const userMail = process.env.USER_MAIL;
 const userPassword = process.env.USER_PASSWORD;
 const loginPage = "/sw?type=L&state=0&lf=mailfence";
 
@@ -103,7 +103,7 @@ test("Step 1 - login to mail", async ({ page }) => {
             "Inbox"
         );
         await inboxButton.click();
-        const documentLocator = page.locator(`[title="${newFileName}"]`);
+        const mailLocator = new BaseElement(page.locator(`[title="${newFileName}"]`), 'mail locator');
         const uploadedLettersElement = new BaseElement(
             page.locator('[class="GCSDBRWBBU"] [tabindex="0"]').first(),
             "what element?!"
@@ -113,7 +113,7 @@ test("Step 1 - login to mail", async ({ page }) => {
             "Refresh"
         );
         await waitUntilMailIsReceived(
-            documentLocator,
+            mailLocator,
             refreshButton,
             uploadedLettersElement
         );
@@ -121,11 +121,11 @@ test("Step 1 - login to mail", async ({ page }) => {
 
     // 5. Open received mail
     await test.step(`open received mail`, async () => {
-        const openSelectedMailButton = new ButtonElement(
+        const selectedMailButton = new ButtonElement(
             page.locator(`[title = "${newFileName}"]`),
             "Our received mail"
         );
-        await openSelectedMailButton.click();
+        await selectedMailButton.click();
     });
 
     // 6. Save the attached file to documents
@@ -209,7 +209,7 @@ test("Step 1 - login to mail", async ({ page }) => {
 });
 
 function dataIsDefined() {
-    if (userMail === undefined) {
+    if (process.env.USER_MAIL === undefined) {
         throw new Error("Custom error: userMail is undefined");
     } else {
         if (userPassword === undefined) {
@@ -236,29 +236,34 @@ async function moveToTrash(
         await page.mouse.move(
             trashCoordinates.x + trashCoordinates.width / 2,
             trashCoordinates.y + trashCoordinates.height / 2,
-            { steps: 20 }
+            { steps: 30 }
         );
     } else {
         throw new Error("Custom error: didn't find trash coordinates");
     }
-    await trashFolderElement.hoverElement();
+ //   await trashFolderElement.hoverElement();
     await page.mouse.up();
-    //   await requiredDocument.waitForElementExpires()
+    await requiredDocument.waitForElementDissapears()
 }
 
 async function waitUntilMailIsReceived(
-    documentLocator: Locator,
+    mailLocator: BaseElement,
     refreshButton: ButtonElement,
     uploadedLettersElement: BaseElement
 ) {
-    const startTime = Date.now();
-    const maxTimeout = 5000;
-    while (Date.now() - startTime < maxTimeout) {
+    let i = 1;
+    while (i <= 20) {
         await uploadedLettersElement.waitForElementAppears();
-        if (await documentLocator.isVisible()) {
+        if (await mailLocator.isVisibleElement()) {
             break;
         } else {
+            i++;
+            await waitForSecond()
             await refreshButton.click();
         }
     }
+}
+
+function waitForSecond() {
+    return new Promise(resolve => setTimeout(resolve, 1000));
 }

@@ -20,15 +20,17 @@ export class BaseElement {
         
     }
 
-    async isVisible() {
-        return await this.getElement().isVisible();
+    async isVisibleElement() {
+        return await test.step(`${this.name} is visible`, async () => {
+            return await this.getElement().isVisible();
+        })
+//        return await this.getElement().isVisible();
     }
 
     async hoverElement() {
         await test.step(`${this.name} hover`, async () => {
             await this.getElement().hover()
         })
-        
     }
 
     async getCoordinates() {
@@ -48,7 +50,7 @@ export class BaseElement {
         })      
     }
 
-    async waitForElementExpires(){
+    async waitForElementDissapears(){
         await this.getElement().waitFor({ state: 'detached'} )
     }
 }
