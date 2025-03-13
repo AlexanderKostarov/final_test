@@ -1,6 +1,6 @@
 import { test, expect, Locator } from "@playwright/test";
 import { Page } from "@playwright/test";
-
+import { faker } from "@faker-js/faker";
 import { BaseElement } from "../src/base-element";
 import { ButtonElement } from "../src/button-element";
 import { InputElement } from "../src/input-element";
@@ -11,24 +11,22 @@ import { FileManager } from "../src/file-manager";
 const userMail = process.env.USER_MAIL;
 const userPassword = process.env.USER_PASSWORD;
 const loginPage = "/sw?type=L&state=0&lf=mailfence";
+const folderPath = path.join(__dirname, "../test-data")
+const mailSubjectName = faker.string.alpha(15)
+//let fileDataObject: object
+const fileDataObject = new FileManager(folderPath)
 
-let newFileName: string
-
-//const fileName = `${mailSubjectName}.txt`;
-
-test.beforeEach(async ({ page }) => {
-    const newFile = new FileManager();
-    newFileName = await newFile.createRandomFile();
+test.beforeEach(async () => {
+    await fileDataObject.createRandomFile();
 });
 
-test.afterEach(async ({ page }) => {
-    const fileForRemoval = new FileManager();
-    fileForRemoval.deleteFile(newFileName);
+test.afterEach(async () => {
+    await fileDataObject.deleteFile();
 });
 
-test("Step 1 - login to mail", async ({ page }) => {
-    // 1. Login to mail
-    await test.step("Log in", async () => {
+test("Mailfence test with mails", async ({ page }) => {
+    
+    await test.step("1. Login to mail", async () => {
         const fillUserName = new InputElement(
             page.locator("#UserID"),
             "UserID"
@@ -40,42 +38,38 @@ test("Step 1 - login to mail", async ({ page }) => {
         const enterButton = new ButtonElement(page.locator(".btn"), "Enter");
         if (dataIsDefined()) {
             await page.goto(loginPage);
-            await fillUserName.enterText(userMail);
-            await fillUserPassword.enterText(userPassword);
+            await fillUserName.enterText(userMail!);
+            await fillUserPassword.enterText(userPassword!);
         } else {
             throw new Error("Custom error: data in .env is undefined");
         }
         await enterButton.click();
     });
-
-    // 2. Attach .txt file
-    await test.step(`Attach .txt file`, async () => {
+    await test.step(`2. Attach .txt file`, async () => {
         const newMailButton = new ButtonElement(
             page.locator('[title="New"]'),
             "New Mail"
         );
         const addAttachmentButton = new ButtonElement(
             page.locator('xpath=(//*[@class="GCSDBRWBISB GCSDBRWBJSB"])[1]'),
-            "ttachment"
+            "attachment"
         );
         const uploadNewFileElement = new UploadElement(
             page.locator('[type="file"][name="docgwt-uid-33"]'),
             "From your computer"
         );
-        const waitAttachmentIsUploaded = new BaseElement(
+        const uploadedAttachmentElement = new BaseElement(
             page.locator('[class="GCSDBRWBJRB"]'),
             "uploaded attachment Element"
         );
-        const relativeFilePath = `./test-data/${newFileName}`;
+        const relativeFilePath = fileDataObject.fileObject.filePath;
         await newMailButton.click();
         await addAttachmentButton.click();
         await uploadNewFileElement.uploadFile(relativeFilePath);
-
-        await waitAttachmentIsUploaded.waitForElementAppears();
+        await uploadedAttachmentElement.waitForElementAppears();
     });
 
-    // 3. Send email with attached file to yourself
-    await test.step("Send email to yourself", async () => {
+    await test.step("3. Send email with attached file to yourself", async () => {
         const mailRecipientField = new InputElement(
             page.locator('[type="text"][tabindex="1"]'),
             "Mail recipient"
@@ -89,24 +83,22 @@ test("Step 1 - login to mail", async ({ page }) => {
             "Send Mail"
         );
 
-        const mailSubjectName = newFileName;
 
-        await mailRecipientField.enterText(userMail);
+        await mailRecipientField.enterText(userMail!);
         await mailsubjectField.enterText(mailSubjectName);
         await sendMailButton.click();
     });
 
-    // 4. Check email is received
-    await test.step("Check email is received", async () => {
+    await test.step("4. Check email is received", async () => {
         const inboxButton = new ButtonElement(
             page.locator("#treeInbox"),
             "Inbox"
         );
         await inboxButton.click();
-        const mailLocator = new BaseElement(page.locator(`[title="${newFileName}"]`), 'mail locator');
+        const mailLocator = new BaseElement(page.locator(`[title="${mailSubjectName}"]`), 'mail locator');
         const uploadedLettersElement = new BaseElement(
             page.locator('[class="GCSDBRWBBU"] [tabindex="0"]').first(),
-            "what element?!"
+            "all letters element"
         );
         const refreshButton = new ButtonElement(
             page.locator('[title="Refresh"]'),
@@ -119,17 +111,15 @@ test("Step 1 - login to mail", async ({ page }) => {
         );
     });
 
-    // 5. Open received mail
-    await test.step(`open received mail`, async () => {
+    await test.step(`5. Open received mail`, async () => {
         const selectedMailButton = new ButtonElement(
-            page.locator(`[title = "${newFileName}"]`),
+            page.locator(`[title = "${mailSubjectName}"]`),
             "Our received mail"
         );
         await selectedMailButton.click();
     });
 
-    // 6. Save the attached file to documents
-    await test.step("Save the attached file", async () => {
+    await test.step("6. Save the attached file to documents", async () => {
         const attachedFileElement = new BaseElement(
             page.locator('[class="GCSDBRWBJRB GCSDBRWBO"]'),
             "attached file"
@@ -160,10 +150,10 @@ test("Step 1 - login to mail", async ({ page }) => {
         await saveInDocumentsButton.click();
         await saveToMyDocumentsFolderButton.click();
         await saveAttachmentButton.click();
+ //       await page.waitForTimeout(2000)
     });
 
-    // 7. Open documents area
-    await test.step("Open documents area", async () => {
+    await test.step("7. Open documents area", async () => {
         const documentsAreaButton = new ButtonElement(
             page.locator('[id="nav-docs"]'),
             "Documents area"
@@ -174,21 +164,21 @@ test("Step 1 - login to mail", async ({ page }) => {
             ),
             "My documents folder"
         );
-        const waitDocumentAppears = new BaseElement(
-            page.locator(`[title="${newFileName}"]`),
+        const documentElement = new BaseElement(
+            page.locator(`[title="${fileDataObject.fileObject.fileName}"]`),
             "downloaded document"
         );
         await documentsAreaButton.click();
         await myDocumentsFolderButton.click();
-        await waitDocumentAppears.waitForElementAppears(); //meant that page is uploaded, instead of waitForTimeout
+ //       await page.waitForTimeout(2000)
+        await documentElement.waitForElementAppears();
     });
 
-    // 8. Move file from documents to trash folder by drag'n'drop action
-    await test.step("Move file to trash", async () => {
+    await test.step("8. Move file from documents to trash folder by drag'n'drop action", async () => {
         const requiredDocumentElement = new BaseElement(
             page
                 .locator('[class="GCSDBRWBFT GCSDBRWBCKB name"]')
-                .filter({ hasText: `${newFileName}` }),
+                .filter({ hasText: `${fileDataObject.fileObject.fileName}` }),
             "required doc element"
         );
         const trashFolderElement = new BaseElement(
@@ -200,8 +190,6 @@ test("Step 1 - login to mail", async ({ page }) => {
             "trash page is opened"
         );
         await moveToTrash(page, requiredDocumentElement, trashFolderElement);
-        // ER: file was moved
-
         await trashFolderElement.click();
         await trashPageIdentifierElement.waitForElementAppears(); //show us that trash page is opened
         await requiredDocumentElement.checkToBeVisible();
@@ -252,16 +240,15 @@ async function waitUntilMailIsReceived(
     uploadedLettersElement: BaseElement
 ) {
     let i = 1;
-    while (i <= 20) {
+    do {
         await uploadedLettersElement.waitForElementAppears();
         if (await mailLocator.isVisibleElement()) {
             break;
         } else {
             i++;
-            await waitForSecond()
             await refreshButton.click();
         }
-    }
+    } while (i < 20)
 }
 
 function waitForSecond() {
