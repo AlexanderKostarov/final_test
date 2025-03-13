@@ -51,6 +51,6 @@ export class BaseElement {
     }
 
     async waitForElementDissapears(){
-        await this.getElement().waitFor({ state: 'detached'} )
+        await this.getElement().waitFor({ state: 'detached', timeout: 1000} )
     }
 }
