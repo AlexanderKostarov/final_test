@@ -7,6 +7,7 @@ import { InputElement } from "../src/input-element";
 import { UploadElement } from "../src/upload-element";
 import path from "path";
 import { FileManager } from "../src/file-manager";
+import { TestfileManager } from "../src/test-file-manager";
 
 const userMail = process.env.USER_MAIL;
 const userPassword = process.env.USER_PASSWORD;
@@ -14,18 +15,20 @@ const loginPage = "/sw?type=L&state=0&lf=mailfence";
 const folderPath = path.join(__dirname, "../test-data")
 const mailSubjectName = faker.string.alpha(15)
 //let fileDataObject: object
-const fileDataObject = new FileManager(folderPath)
+//const fileDataObject = new FileManager(folderPath)
+
+
+let newFileManager = TestfileManager.createRandomFile(folderPath)
 
 test.beforeEach(async () => {
-    await fileDataObject.createRandomFile();
+    
 });
 
 test.afterEach(async () => {
-    await fileDataObject.deleteFile();
+    await TestfileManager.deleteFile(((await newFileManager).filePath));
 });
 
 test("Mailfence test with mails", async ({ page }) => {
-    
     await test.step("1. Login to mail", async () => {
         const fillUserName = new InputElement(
             page.locator("#UserID"),
@@ -62,10 +65,10 @@ test("Mailfence test with mails", async ({ page }) => {
             page.locator('[class="GCSDBRWBJRB"]'),
             "uploaded attachment Element"
         );
-        const relativeFilePath = fileDataObject.fileObject.filePath;
+  //      const relativeFilePath = fileDataObject.fileObject.filePath;
         await newMailButton.click();
         await addAttachmentButton.click();
-        await uploadNewFileElement.uploadFile(relativeFilePath);
+        await uploadNewFileElement.uploadFile((await newFileManager).filePath);
         await uploadedAttachmentElement.waitForElementAppears();
     });
 
@@ -165,7 +168,7 @@ test("Mailfence test with mails", async ({ page }) => {
             "My documents folder"
         );
         const documentElement = new BaseElement(
-            page.locator(`[title="${fileDataObject.fileObject.fileName}"]`),
+            page.locator(`[title="${(await newFileManager).fileName}"]`),
             "downloaded document"
         );
         await documentsAreaButton.click();
@@ -178,7 +181,7 @@ test("Mailfence test with mails", async ({ page }) => {
         const requiredDocumentElement = new BaseElement(
             page
                 .locator('[class="GCSDBRWBFT GCSDBRWBCKB name"]')
-                .filter({ hasText: `${fileDataObject.fileObject.fileName}` }),
+                .filter({ hasText: `${(await newFileManager).fileName}` }),
             "required doc element"
         );
         const trashFolderElement = new BaseElement(

@@ -44,9 +44,9 @@ export class BaseElement {
 
     }
 
-    async waitForElementAppears() {
+    async waitForElementAppears( timeout?: number) {
         await test.step(`wait for ${this.name} appearance`, async () =>{
-            await this.getElement().waitFor({state: 'visible', timeout: 2000})
+            await this.getElement().waitFor({state: 'visible', timeout: timeout})
         })      
     }
 
