@@ -7,25 +7,24 @@ import { InputElement } from "../src/input-element";
 import { UploadElement } from "../src/upload-element";
 import path from "path";
 import { FileManager } from "../src/file-manager";
-import { TestfileManager } from "../src/test-file-manager";
+import { TestFileConfig, TestfileManager } from "../src/test-file-manager";
 
 const userMail = process.env.USER_MAIL;
 const userPassword = process.env.USER_PASSWORD;
 const loginPage = "/sw?type=L&state=0&lf=mailfence";
-const folderPath = path.join(__dirname, "../test-data")
-const mailSubjectName = faker.string.alpha(15)
+const folderPath = path.join(__dirname, "../test-data");
+const mailSubjectName = faker.string.alpha(15);
 //let fileDataObject: object
 //const fileDataObject = new FileManager(folderPath)
 
-
-let newFileManager = TestfileManager.createRandomFile(folderPath)
+let newFileManager: TestFileConfig;
 
 test.beforeEach(async () => {
-    
+    newFileManager = await TestfileManager.createRandomFile(folderPath);
 });
 
 test.afterEach(async () => {
-    await TestfileManager.deleteFile(((await newFileManager).filePath));
+    await TestfileManager.deleteFile(newFileManager.filePath);
 });
 
 test("Mailfence test with mails", async ({ page }) => {
@@ -65,7 +64,7 @@ test("Mailfence test with mails", async ({ page }) => {
             page.locator('[class="GCSDBRWBJRB"]'),
             "uploaded attachment Element"
         );
-  //      const relativeFilePath = fileDataObject.fileObject.filePath;
+        //      const relativeFilePath = fileDataObject.fileObject.filePath;
         await newMailButton.click();
         await addAttachmentButton.click();
         await uploadNewFileElement.uploadFile((await newFileManager).filePath);
@@ -86,7 +85,6 @@ test("Mailfence test with mails", async ({ page }) => {
             "Send Mail"
         );
 
-
         await mailRecipientField.enterText(userMail!);
         await mailsubjectField.enterText(mailSubjectName);
         await sendMailButton.click();
@@ -97,8 +95,11 @@ test("Mailfence test with mails", async ({ page }) => {
             page.locator("#treeInbox"),
             "Inbox"
         );
- //       await inboxButton.click();
-        const mailLocator = new BaseElement(page.locator(`[title="${mailSubjectName}"]`), 'mail locator');
+        //       await inboxButton.click();
+        const mailLocator = new BaseElement(
+            page.locator(`[title="${mailSubjectName}"]`),
+            "mail locator"
+        );
         const uploadedLettersElement = new BaseElement(
             page.locator('[class="GCSDBRWBBU"] [tabindex="0"]').first(),
             "all letters element"
@@ -153,7 +154,7 @@ test("Mailfence test with mails", async ({ page }) => {
         await saveInDocumentsButton.click();
         await saveToMyDocumentsFolderButton.click();
         await saveAttachmentButton.click();
- //       await page.waitForTimeout(2000)
+        //       await page.waitForTimeout(2000)
     });
 
     await test.step("7. Open documents area", async () => {
@@ -173,7 +174,7 @@ test("Mailfence test with mails", async ({ page }) => {
         );
         await documentsAreaButton.click();
         await myDocumentsFolderButton.click();
- //       await page.waitForTimeout(2000)
+        //       await page.waitForTimeout(2000)
         await documentElement.waitForElementAppears();
     });
 
@@ -232,9 +233,9 @@ async function moveToTrash(
     } else {
         throw new Error("Custom error: didn't find trash coordinates");
     }
- //   await trashFolderElement.hoverElement();
+    //   await trashFolderElement.hoverElement();
     await page.mouse.up();
-    await requiredDocument.waitForElementDissapears()
+    await requiredDocument.waitForElementDissapears();
 }
 
 async function waitUntilMailIsReceived(
@@ -242,18 +243,18 @@ async function waitUntilMailIsReceived(
     refreshButton: ButtonElement,
     uploadedLettersElement: BaseElement
 ) {
-    let i = 1;
-    let lastMessage;
+    let tryNumber = 1;
+    let isNeededMessageAppeared;
     do {
         await refreshButton.click();
-        await uploadedLettersElement.waitForElementAppears(2000);
-        lastMessage = await mailLocator.isVisibleElement()
-        i++
-        console.log(lastMessage)
-    } while (i < 20 && !lastMessage)
-    console.log(lastMessage)
-}
-
-function waitForSecond() {
-    return new Promise(resolve => setTimeout(resolve, 1000));
+        try {
+            await uploadedLettersElement.waitForElementAppears(2000);
+            isNeededMessageAppeared = await mailLocator.isVisibleElement();
+        } catch {
+            console.log(
+                `Element with all letters was not uploaded at the try #${tryNumber}`
+            );
+        }
+        tryNumber++;
+    } while (tryNumber < 20 && !isNeededMessageAppeared);
 }
