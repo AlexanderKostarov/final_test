@@ -2,8 +2,8 @@ import path from "path";
 import { faker } from "@faker-js/faker";
 import { promises as fs } from "fs";
 
-export class TestfileManager {
-    static async createRandomFile(folderPath: string): Promise<TestFileConfig> {
+export class FileManager {
+    static async createRandomFile(folderPath: string): Promise<FileConfig> {
         const fileName = faker.string.alphanumeric(5) + ".txt";
         const fileText = faker.string.alphanumeric(30);
         const filePath = path.join(folderPath, fileName);
@@ -16,7 +16,7 @@ export class TestfileManager {
     }
 }
 
-export type TestFileConfig = {
+export type FileConfig = {
     fileName: string;
     filePath: string;
 };
