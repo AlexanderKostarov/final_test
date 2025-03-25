@@ -7,6 +7,7 @@ import { LoginPage } from "../src/Pages/login-page";
 import { MessagePage } from "../src/Pages/messages-page";
 import { SaveAttachment } from "../src/Page_Components/save-attachment";
 import { DocumentsPage } from "../src/Pages/documents-page";
+import { Header } from "../src/Pages/header";
 
 const userMail = process.env.USER_MAIL;
 const userPassword = process.env.USER_PASSWORD;
@@ -25,31 +26,30 @@ test.afterEach(async () => {
 });
 
 test("Mailfence test with mails", async ({ page }) => {
-   
-        await page.goto(loginPageURL);
-        const loginPage = new LoginPage(page);
-        await loginPage.login(userMail!, userPassword!)
+    await page.goto(loginPageURL);
+    const loginPage = new LoginPage(page);
+    await loginPage.login(userMail!, userPassword!);
 
-        const newMailPage = new MessagePage(page)
-        await newMailPage.getToNewMailPage()
+    const messagePage = new MessagePage(page);
+    await messagePage.openNewMailForm();
 
-        await newMailPage.fillNewMailData(userMail!, mailSubjectName, fileAttachment.filePath)
-        await newMailPage.sendMail()
+    await messagePage.fillNewMailForm({userMail: userMail!, mailSubject: mailSubjectName, attachmentAddress: fileAttachment.filePath});
+    await messagePage.sendMail();
 
-        const inboxPage = new MessagePage(page)
-        await inboxPage.waitUntilMessageIsReceived(mailSubjectName);
+    await messagePage.waitUntilMessageIsReceived(mailSubjectName);
 
-        await inboxPage.openNeededMail(mailSubjectName)
+    await messagePage.openMailBySubject(mailSubjectName);
 
-        await inboxPage.saveAttachmentToDocuments();
+    await messagePage.saveAttachmentToDocuments();
 
-    
-        const documentPage = new DocumentsPage(page);
-        await documentPage.openDocumentsArea();
-        await documentPage.moveToTrash(fileAttachment.fileName);
+    const navigator = new Header(page)
+    await navigator.navigateToDocumentPage()
 
-        await documentPage.checkReqieredDocumentIsInTrash(fileAttachment.fileName);
-    
+    const documentPage = new DocumentsPage(page);
+    await documentPage.navigateToMyDocuments();
+    await documentPage.moveFileToTrash(fileAttachment.fileName);
+
+    await documentPage.checkDocumentIsInTrash(fileAttachment.fileName);
 });
 
 function dataIsDefined() {

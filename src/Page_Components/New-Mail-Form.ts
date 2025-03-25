@@ -10,6 +10,7 @@ export class NewMailForm {
         page: Page
         mailRecipientField
         mailsubjectField
+        mailBodyField
         attachFile
         sendMailButton
         newMailPage
@@ -21,6 +22,7 @@ export class NewMailForm {
             this.attachFile = new AttachFile(this.page)
             this.sendMailButton = new ButtonElement(this.page.locator("#mailSend"), "Send Mail");
             this.newMailPage = new MessagesNavBar(page)
+            this.mailBodyField = new InputElement(this.page.locator('???'), "Mail body")
         }
     
     async enterRecipientAddress(recipientAddress: string) {
@@ -35,13 +37,20 @@ export class NewMailForm {
         await this.attachFile.attachFile(filePath)
     }
 
+    async enterMailBody(mailBody: string){
+        await this.mailBodyField.enterText(mailBody)
+    }
+
     async sendMail() {
         await this.sendMailButton.click();
     }
 
-    async fillNewMailData(userMail: string, mailSubject: string, attachmentAddress: string) {
-        await this.enterRecipientAddress(userMail)
-        await this.enterMailSubjectName(mailSubject)
-        await this.attachFileFunction(attachmentAddress)
+    async fillNewMailData(Options: {userMail: string, mailSubject: string, attachmentAddress: string, mailBody?: string}) {//userMail: string, mailSubject: string, attachmentAddress: string) {
+        await this.enterRecipientAddress(Options.userMail)
+        await this.enterMailSubjectName(Options.mailSubject)
+        await this.attachFileFunction(Options.attachmentAddress)
+        if (Options.mailBody) {
+            await this.enterMailBody(Options.mailBody)
+        }
     }
 }

@@ -1,21 +1,30 @@
-import { Page, test } from "@playwright/test";
+import { Page, test, expect } from "@playwright/test";
 import { ButtonElement } from "../Elements/button-element";
 import { BaseElement } from "../Elements/base-element";
+import { Header } from "./header";
 
 export class DocumentsPage {
     page: Page;
-    documentsAreaButton;
     myDocumentsFolderButton;
     trashFolderElement;
     trashPageIdentifierElement;
+    getElement = (fileName: string) => {
+        return this.page
+        .locator('[class="GCSDBRWBFT GCSDBRWBCKB name"]')
+        .filter({ hasText: `${fileName}` })
+    }
+    fileElement = (fileName: string) => {
+        return new BaseElement(
+            this.page
+                .locator('[class="GCSDBRWBFT GCSDBRWBCKB name"]')
+                .filter({ hasText: `${fileName}` }),
+            "required doc element"
+        );
+    };
 
     constructor(page: Page) {
         this.page = page;
-
-        this.documentsAreaButton = new ButtonElement(
-            page.locator('[id="nav-docs"]'),
-            "Documents area"
-        );
+        
         this.myDocumentsFolderButton = new ButtonElement(
             page.locator(
                 '[class="GCSDBRWBDX treeItemRoot GCSDBRWBLX nodeSel"]'
@@ -32,26 +41,19 @@ export class DocumentsPage {
         );
     }
 
-    async openDocumentsArea() {
-        await test.step("Open documents area", async () => {
-            await this.documentsAreaButton.click();
+    async navigateToMyDocuments() {
+        await test.step("Open My documents", async () => {
             await this.myDocumentsFolderButton.click();
         });
     }
 
-    async moveToTrash(fileName: string) {
+    async moveFileToTrash(fileName: string) {
         await test.step("Move file from documents to trash folder by drag'n'drop action", async () => {
-            const neededElement = new BaseElement(
-                this.page
-                    .locator('[class="GCSDBRWBFT GCSDBRWBCKB name"]')
-                    .filter({ hasText: `${fileName}` }),
-                "required doc element"
-            );
-           
-            await neededElement.waitForElementAppears()
-            
-            const trashCoordinates = await this.trashFolderElement.getCoordinates();
-            await neededElement.hoverElement();
+            await this.fileElement(fileName).waitForElementAppears();
+
+            const trashCoordinates =
+                await this.trashFolderElement.getCoordinates();
+            await this.fileElement(fileName).hoverElement();
             await this.page.mouse.down();
             if (trashCoordinates) {
                 await this.page.mouse.move(
@@ -63,11 +65,11 @@ export class DocumentsPage {
                 throw new Error("Custom error: didn't find trash coordinates");
             }
             await this.page.mouse.up();
-            await neededElement.waitForElementDissapears();
+            await this.fileElement(fileName).waitForElementDissapears();
         });
     }
 
-    async getToTrashFolder() {
+    async openTrashFolder() {
         await this.trashFolderElement.click();
     }
 
@@ -75,17 +77,13 @@ export class DocumentsPage {
         this.trashPageIdentifierElement.waitForElementAppears();
     }
 
-    async checkReqieredDocumentIsInTrash(fileName: string) {
+    async checkDocumentIsInTrash(fileName: string) {
+        await test.step("Open trash folder", async () => {
+            await this.openTrashFolder();
+        });
         await test.step("Check required file is in trash", async () => {
-            await this.getToTrashFolder();
-            await this.waitForTrashPageIdentifierElementAppears();
-            const neededElement = new BaseElement(
-                this.page
-                    .locator('[class="GCSDBRWBFT GCSDBRWBCKB name"]')
-                    .filter({ hasText: `${fileName}` }),
-                "required doc element"
-            );
-            neededElement.checkToBeVisible();
+         //   this.fileElement(fileName).IsVisible(); // expect use here
+            await expect(this.getElement(fileName)).toBeVisible()   
         });
     }
 }
