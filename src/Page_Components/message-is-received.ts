@@ -15,21 +15,19 @@ export class MessageIsReceived {
 
     async waitUntilMailIsReceived(mailSubjectName: string) {
         let tryNumber = 1;
-        let isNeededMessageAppeared;
         const neededMailElement = new BaseElement(this.page.locator(`[title="${mailSubjectName}"]`), "mail locator")
         do {
             await this.refreshButton.click();
             try {
-                await this.uploadedLettersElement.waitForElementAppears(2000);
-                isNeededMessageAppeared = await neededMailElement.isVisibleElement();
+                await neededMailElement.waitForElementAppears(2000);
+                break;
             } catch {
                 console.log(
-                    `Element with all letters was not uploaded at the try #${tryNumber}`
+                    `Needed mail was not uploaded at the try #${tryNumber}`
                 );
             }
-            tryNumber++;
         } 
-        while (tryNumber < 20 && !isNeededMessageAppeared);
+        while (tryNumber++ < 20);
     }
 
     async openNeededMail(mailSubjectName: string) {

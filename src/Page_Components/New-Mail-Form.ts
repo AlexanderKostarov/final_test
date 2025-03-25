@@ -1,4 +1,4 @@
-import { Page } from "@playwright/test"
+import { Page, test } from "@playwright/test"
 import { ButtonElement } from "../Elements/button-element";
 import { InputElement } from "../Elements/input-element";
 import { AttachFile } from "./attach-file";
@@ -35,7 +35,13 @@ export class NewMailForm {
         await this.attachFile.attachFile(filePath)
     }
 
-    async clickSendButton() {
+    async sendMail() {
         await this.sendMailButton.click();
+    }
+
+    async fillNewMailData(userMail: string, mailSubject: string, attachmentAddress: string) {
+        await this.enterRecipientAddress(userMail)
+        await this.enterMailSubjectName(mailSubject)
+        await this.attachFileFunction(attachmentAddress)
     }
 }

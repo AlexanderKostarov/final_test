@@ -34,7 +34,9 @@ export class BaseElement {
     }
 
     async getCoordinates() {
-        return await this.getElement().boundingBox()
+        return await test.step(`Get trash folder's coordinates`, async () => {
+            return await this.getElement().boundingBox()
+        })
     }
 
     async checkToBeVisible() {
@@ -51,6 +53,8 @@ export class BaseElement {
     }
 
     async waitForElementDissapears(){
-        await this.getElement().waitFor({ state: 'detached', timeout: 1000} )
+        await test.step(`wait for ${this.name} dissapears`, async () =>{
+            await this.getElement().waitFor({ state: 'detached', timeout: 1000} )
+        })
     }
 }

@@ -19,13 +19,9 @@ export class SaveAttachment {
         this.saveAttachmentButton = new ButtonElement(page.locator('[tabindex="0"][class="btn GCSDBRWBO defaultBtn"]'),"Save attachment");
     }
 
-    async hoverElement() {
-        await this.attachedFileElement.hoverElement()
-    }
-    async openDropdown() {
-        await this.attachedFilesDropdownButton.click()
-    }
     async saveInDocuments() {
+        await this.attachedFileElement.hoverElement()
+        await this.attachedFilesDropdownButton.click()
         await this.saveInDocumentsButton.click()
         await this.saveToMyDocumentsFolderButton.click()
         await this.saveAttachmentButton.click()
