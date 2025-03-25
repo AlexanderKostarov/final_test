@@ -36,12 +36,12 @@ test("Mailfence test with mails", async ({ page }) => {
         await newMailPage.fillNewMailData(userMail!, mailSubjectName, fileAttachment.filePath)
         await newMailPage.sendMail()
 
-        const inboxPageWithNeededMail = new MessagePage(page)
-        await inboxPageWithNeededMail.waitUntilMessageIsReceived(mailSubjectName);
+        const inboxPage = new MessagePage(page)
+        await inboxPage.waitUntilMessageIsReceived(mailSubjectName);
 
-        await inboxPageWithNeededMail.openNeededMail(mailSubjectName)
+        await inboxPage.openNeededMail(mailSubjectName)
 
-        await inboxPageWithNeededMail.saveAttachmentToDocuments();
+        await inboxPage.saveAttachmentToDocuments();
 
     
         const documentPage = new DocumentsPage(page);

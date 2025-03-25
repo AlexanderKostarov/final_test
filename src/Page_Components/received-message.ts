@@ -2,7 +2,7 @@ import { Page } from "@playwright/test";
 import { BaseElement } from "../Elements/base-element";
 import { ButtonElement } from "../Elements/button-element";
 
-export class MessageIsReceived {
+export class ReceivedMessage {
     page: Page
     uploadedLettersElement
     refreshButton

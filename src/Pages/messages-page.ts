@@ -1,7 +1,7 @@
 import { Page, test } from "@playwright/test";
 import { MessagesNavBar } from "../Page_Components/messages-nav-bar";
 import { NewMailForm } from "../Page_Components/New-Mail-Form";
-import { MessageIsReceived } from "../Page_Components/message-is-received";
+import { ReceivedMessage } from "../Page_Components/received-message";
 import { SaveAttachment } from "../Page_Components/save-attachment";
 
 export class MessagePage {
@@ -15,7 +15,7 @@ export class MessagePage {
         this.page = page;
         this.messageNavBar = new MessagesNavBar(this.page);
         this.newMailForm = new NewMailForm(this.page);
-        this.receivedMessage = new MessageIsReceived(this.page);
+        this.receivedMessage = new ReceivedMessage(this.page);
         this.attachment = new SaveAttachment(this.page)
     }
 
@@ -37,9 +37,9 @@ export class MessagePage {
         })
     }
 
-    async fillNewMailData(userMail: string, mailSubject: string, attachmentAddress: string){
+    async fillNewMailData(userMail: string, mailSubject: string, attachmentLocation: string){
         await test.step(`Fill data for the new mail`, async () => {
-            await this.newMailForm.fillNewMailData(userMail, mailSubject, attachmentAddress)
+            await this.newMailForm.fillNewMailData(userMail, mailSubject, attachmentLocation)
         })
     }
     async sendMail(){
