@@ -22,7 +22,7 @@ export class NewMailForm {
             this.attachFile = new AttachFile(this.page)
             this.sendMailButton = new ButtonElement(this.page.locator("#mailSend"), "Send Mail");
             this.newMailPage = new MessagesNavBar(page)
-            this.mailBodyField = new InputElement(this.page.locator('???'), "Mail body")
+            this.mailBodyField = new InputElement(this.page.locator('[frameborder="0"]').contentFrame().locator('[g_editable="true"]'), "Mail body")
         }
     
     async enterRecipientAddress(recipientAddress: string) {
